@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리 반 최적 교실 온도 찾기</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Pretendard', '맑은 고딕', sans-serif;
+        }
+        body {
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            font-size: 24px;
+            margin-bottom: 25px;
+        }
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 18px;
+            margin-top: 0;
+            color: #334155;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        input[type="number"], input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        .result-box {
+            text-align: center;
+            background: #eff6ff;
+            border: 2px solid #bfdbfe;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .result-temp {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2563eb;
+            margin: 10px 0;
+        }
+        .satisfaction-btns {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-sat {
+            flex: 1;
+            background-color: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-sat:hover {
+            background-color: #e2e8f0;
+        }
+        .stats-list {
+            list-style: none;
+            padding: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 14px;
+            color: #475569;
+        }
+        .stats-list li {
+            padding: 5px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🌡️ 우리 반 최적 교실 온도 찾기</h1>
+
+    <!-- 1. 희망 온도 입력 섹션 -->
+    <div class="card">
+        <h2>1. 내가 희망하는 교실 온도 제출하기</h2>
+        <div class="input-group">
+            <input type="text" id="studentName" placeholder="이름 (선택)" style="width: 30%;">
+            <input type="number" id="tempInput" placeholder="희망 온도 (°C)" min="15" max="30" step="0.5">
+            <button onclick="addTemperature()">제출</button>
+        </div>
+    </div>
+
+    <!-- 2. 결과 출력 섹션 -->
+    <div class="result-box">
+        <h2>📊 친구들이 정한 최적의 온도</h2>
+        <div class="result-temp" id="avgTempDisplay">-- °C</div>
+        <p id="totalCount">현재 총 0명의 친구가 참여했습니다.</p>
+    </div>
+
+    <!-- 3. 최적 온도 만족도 조사 섹션 -->
+    <div class="card">
+        <h2>2. 추천된 최적 온도로 생활해본 후 만족도 평가</h2>
+        <p style="font-size: 14px; color: #64748b;">위 추천 온도에 얼마나 만족하시나요?</p>
+        <div class="satisfaction-btns">
+            <button class="btn-sat" onclick="voteSatisfaction('만족')">😊 만족</button>
+            <button class="btn-sat" onclick="voteSatisfaction('보통')">😐 보통</button>
+            <button class="btn-sat" onclick="voteSatisfaction('불만족')">🙁 불만족</button>
+        </div>
+        <div style="margin-top: 15px; font-size: 14px;" id="satResult">
+            만족: 0명 | 보통: 0명 | 불만족: 0명
+        </div>
+    </div>
+
+    <!-- 4. 참여자 목록 및 기록 -->
+    <div class="card">
+        <h2>📋 입력 내역</h2>
+        <ul class="stats-list" id="logList">
+            <li>아직 입력된 데이터가 없습니다.</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // 데이터 저장 배열 및 객체
+    let tempArray = [];
+    let satisfactionVotes = { '만족': 0, '보통': 0, '불만족': 0 };
+
+    // 온도 제출 함수
+    function addTemperature() {
+        const nameInput = document.getElementById('studentName');
+        const tempInput = document.getElementById('tempInput');
+        
+        const name = nameInput.value.trim() || '익명';
+        const temp = parseFloat(tempInput.value);
+
+        if (isNaN(temp) || temp < 15 || temp > 30) {
+            alert('15°C에서 30°C 사이의 올바른 온도를 입력해 주세요!');
+            return;
+        }
+
+        // 데이터 추가
+        tempArray.push({ name, temp });
+        
+        // 입력창 초기화
+        tempInput.value = '';
+        nameInput.value = '';
+
+        // 화면 업데이트
+        updateResults();
+    }
+
+    // 결과 및 평균값 업데이트 함수
+    function updateResults() {
+        const avgDisplay = document.getElementById('avgTempDisplay');
+        const countDisplay = document.getElementById('totalCount');
+        const logList = document.getElementById('logList');
+
+        // 평균 계산
+        const sum = tempArray.reduce((acc, cur) => acc + cur.temp, 0);
+        const avg = (sum / tempArray.length).toFixed(1); // 소수점 첫째자리까지
+
+        // 화면 반영
+        avgDisplay.innerText = `${avg} °C`;
+        countDisplay.innerText = `현재 총 ${tempArray.length}명의 친구가 참여했습니다.`;
+
+        // 목록 업데이트
+        logList.innerHTML = '';
+        tempArray.slice().reverse().forEach(item => {
+            const li = document.createElement('li');
+            li.innerText = `${item.name} 친구가 ${item.temp}°C를 희망했습니다.`;
+            logList.appendChild(li);
+        });
+    }
+
+    // 만족도 투표 함수
+    function voteSatisfaction(type) {
+        if (tempArray.length === 0) {
+            alert('먼저 친구들의 희망 온도를 입력하여 최적 온도를 구해주세요!');
+            return;
+        }
+        
+        satisfactionVotes[type]++;
+        
+        // 만족도 결과 업데이트
+        const satResult = document.getElementById('satResult');
+        satResult.innerText = `만족: ${satisfactionVotes['만족']}명 | 보통: ${satisfactionVotes['보통']}명 | 불만족: ${satisfactionVotes['불만족']}명`;
+        
+        alert(`'${type}'에 투표하셨습니다. 감사합니다!`);
+    }
+</script>
+
+</body>
+</html>
