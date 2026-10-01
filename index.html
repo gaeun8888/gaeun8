@@ -1,236 +1,1073 @@
-<!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>두더지 잡기 게임</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f0f8ff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            user-select: none;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우리반 교실 최적 온도 솔루션 🌡️</title>
+  <!-- Pretendard 웹폰트 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  
+  <style>
+    :root {
+      --primary-sky: #0284c7;
+      --primary-sky-light: #e0f2fe;
+      --primary-pink: #ec4899;
+      --primary-pink-light: #fce7f3;
+      --temp-low-blue: #2563eb;
+      --temp-high-red: #ef4444;
+      --card-bg: #ffffff;
+      --body-bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #fef2f2 50%, #fdf2f8 100%);
+      --text-main: #0f172a;
+      --text-sub: #64748b;
+      --border-light: #e2e8f0;
+      --shadow-soft: 0 20px 40px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(0,0,0,0.04);
+    }
 
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-        }
+    * {
+      box-sizing: border-box;
+      font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
 
-        .info-panel {
-            display: flex;
-            gap: 20px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
+    body {
+      background: var(--body-bg-gradient);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px 16px;
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 120px);
-            grid-template-rows: repeat(3, 120px);
-            gap: 15px;
-            background-color: #8b5a2b;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-        }
+    .app-layout {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+      max-width: 1200px;
+    }
 
-        .hole {
-            width: 120px;
-            height: 120px;
-            background-color: #5c3a21;
-            border-radius: 50%;
-            position: relative;
-            overflow: hidden;
-            border: 4px solid #3d2314;
-            cursor: pointer;
-        }
+    .side-widget {
+      width: 230px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex-shrink: 0;
+    }
 
-        .mole {
-            width: 90px;
-            height: 90px;
-            background-color: #a52a2a;
-            border-radius: 50% 50% 20% 20%;
-            position: absolute;
-            bottom: -100px;
-            left: 15px;
-            transition: bottom 0.1s ease-in-out;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
+    @media (max-width: 1024px) {
+      .side-widget {
+        display: none;
+      }
+    }
 
-        /* 두더지 얼굴 요소 */
-        .mole::before {
-            content: '👀';
-            font-size: 24px;
-            margin-top: -10px;
-        }
-        .mole::after {
-            content: '👃';
-            font-size: 16px;
-            margin-top: -5px;
-        }
+    .widget-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-light);
+    }
 
-        /* 두더지가 올라왔을 때 */
-        .hole.up .mole {
-            bottom: 10px;
-        }
+    .widget-badge-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f8fafc;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border-light);
+    }
 
-        /* 잡혔을 때 효과 */
-        .mole.hit {
-            background-color: #ff4500;
-        }
-        .mole.hit::before {
-            content: '😵';
-        }
+    .widget-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
 
-        button {
-            margin-top: 25px;
-            padding: 12px 30px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: background-color 0.2s;
-        }
+    .widget-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
 
-        button:hover {
-            background-color: #45a049;
-        }
+    .widget-label { font-size: 0.75rem; color: var(--text-sub); font-weight: 700; }
+    .widget-value { font-size: 0.95rem; color: var(--text-main); font-weight: 800; }
 
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-    </style>
+    .widget-value-input {
+      font-size: 0.95rem;
+      color: var(--text-main);
+      font-weight: 800;
+      border: 1.5px solid transparent;
+      background: transparent;
+      padding: 2px 4px;
+      border-radius: 8px;
+      width: 100%;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .widget-value-input:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .widget-value-input:focus {
+      background: #ffffff;
+      border-color: var(--primary-sky);
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
+
+    .app-card {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 720px;
+      min-height: 640px;
+      border-radius: 32px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .step-header {
+      padding: 28px 36px 18px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-light);
+      display: none;
+    }
+
+    .step-tracker {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .step-tracker::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: #f1f5f9;
+      z-index: 1;
+      transform: translateY(-50%);
+      border-radius: 2px;
+    }
+
+    .step-progress-bar {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-sky), var(--primary-pink));
+      z-index: 1;
+      transform: translateY(-50%);
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 0%;
+      border-radius: 2px;
+    }
+
+    .step-node {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--text-sub);
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+
+    .step-node.active {
+      border-color: var(--primary-pink);
+      background: var(--primary-pink);
+      color: white;
+      box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.15);
+    }
+
+    .step-node.done {
+      border-color: var(--primary-sky);
+      background: var(--primary-sky);
+      color: white;
+    }
+
+    .step-body {
+      padding: 36px 36px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .title-large {
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+      color: var(--text-main);
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .desc-text {
+      font-size: 1.02rem;
+      color: var(--text-sub);
+      line-height: 1.55;
+      margin-bottom: 28px;
+      text-align: center;
+      word-break: keep-all;
+    }
+
+    .btn-main {
+      background: linear-gradient(135deg, #0284c7 0%, #ec4899 100%);
+      color: white;
+      border: none;
+      padding: 16px 38px;
+      font-size: 1.125rem;
+      font-weight: 800;
+      border-radius: 18px;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(236, 72, 153, 0.28);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-main:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(236, 72, 153, 0.38);
+    }
+
+    .start-hero {
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .start-icon-box {
+      font-size: 4.8rem;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 10px 15px rgba(2, 132, 199, 0.15));
+    }
+
+    .control-panel {
+      background: #f8fafc;
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      padding: 16px 20px;
+      width: 100%;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .panel-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .student-input-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .num-input {
+      width: 60px;
+      padding: 6px 10px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--text-main);
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .btn-apply-count {
+      background: #0284c7;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .preset-chips {
+      display: flex;
+      gap: 6px;
+    }
+
+    .chip-btn {
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      padding: 5px 12px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .student-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+      gap: 12px;
+      width: 100%;
+      max-height: 290px;
+      overflow-y: auto;
+      padding-right: 4px;
+      margin-bottom: 24px;
+    }
+
+    .input-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border-light);
+      border-radius: 16px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .input-card.cool { background: #f0f9ff; border-color: #bae6fd; }
+    .input-card.warm { background: #fff1f2; border-color: #fecdd3; }
+
+    .input-card .name-input {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text-sub);
+      border: none;
+      background: transparent;
+      text-align: center;
+      width: 100%;
+      outline: none;
+    }
+
+    .input-card .temp-val { font-size: 1.35rem; font-weight: 900; color: var(--text-main); }
+
+    .btn-group-mini { display: flex; gap: 6px; width: 100%; margin-top: 2px; }
+    .btn-mini {
+      flex: 1;
+      border: none;
+      padding: 6px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .btn-mini.minus { background: #e0f2fe; color: #0284c7; }
+    .btn-mini.plus { background: #fce7f3; color: #db2777; }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .mini-stat-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 14px;
+      text-align: center;
+    }
+    .mini-stat-card .st-title { font-size: 0.8rem; font-weight: 700; color: var(--text-sub); margin-bottom: 4px; }
+    .mini-stat-card .st-value { font-size: 1.4rem; font-weight: 900; color: var(--text-main); }
+
+    .graph-box {
+      width: 100%;
+      background: #f8fafc;
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid var(--border-light);
+      margin-bottom: 24px;
+    }
+
+    .graph-bar-outer {
+      height: 52px;
+      background: #e2e8f0;
+      border-radius: 26px;
+      display: flex;
+      overflow: hidden;
+      margin-bottom: 18px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .bar-segment {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 900;
+      font-size: 1.05rem;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bar-low { background: var(--temp-low-blue); }
+    .bar-high { background: var(--temp-high-red); }
+
+    .analysis-comment-box {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 14px 18px;
+      border: 1px solid var(--border-light);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #334155;
+      text-align: center;
+    }
+
+    .loading-spinner-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 40px 0;
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #e0f2fe;
+      border-top-color: var(--primary-sky);
+      border-radius: 50%;
+      animation: spin 0.8s infinite linear;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .result-content-area {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    .result-circle-box {
+      background: linear-gradient(135deg, #e0f2fe 0%, #fce7f3 100%);
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), 0 16px 32px rgba(2, 132, 199, 0.18);
+      border: 8px solid #ffffff;
+      margin-bottom: 24px;
+    }
+
+    .result-temp-number {
+      font-size: 5rem;
+      font-weight: 900;
+      color: #0284c7;
+      line-height: 1;
+      margin: 4px 0;
+    }
+
+    .satisfaction-guarantee-card {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 14px 20px;
+      border-radius: 16px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 28px;
+      width: 100%;
+    }
+
+    .poll-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .poll-card {
+      background: #ffffff;
+      border: 2px solid var(--border-light);
+      border-radius: 18px;
+      padding: 16px 20px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .poll-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .poll-label { font-size: 1.05rem; font-weight: 800; color: var(--text-main); }
+    .poll-count { font-size: 0.95rem; font-weight: 800; color: var(--primary-pink); }
+
+    .poll-bg-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      background: #fbcfe8;
+      opacity: 0.35;
+      width: 0%;
+      transition: width 0.4s ease;
+      z-index: 1;
+    }
+
+    .solution-card {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #334155;
+      display: none;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
 
-    <h1>🔨 두더지 잡기 게임</h1>
+  <div class="app-layout">
     
-    <div class="info-panel">
-        <div>점수: <span id="score">0</span></div>
-        <div>남은 시간: <span id="time-left">30</span>초</div>
+    <!-- LEFT SIDE WIDGET -->
+    <div class="side-widget">
+      <div class="widget-title">
+        <span>📊</span> 교실 환경 모니터
+      </div>
+
+      <div class="widget-badge-item">
+        <div class="widget-icon" style="background: #e0f2fe; color: #0284c7;">🏫</div>
+        <div class="widget-info">
+          <span class="widget-label">현재 우리반</span>
+          <input type="text" id="classNameInput" class="widget-value-input" value="3학년 5반" onchange="updateClassName(this.value)" title="클릭하여 학급명을 수정하세요" />
+        </div>
+      </div>
+
+      <div class="widget-badge-item">
+        <div class="widget-icon" style="background: #fce7f3; color: #db2777;">👥</div>
+        <div class="widget-info">
+          <span class="widget-label">총 참여 인원</span>
+          <span class="widget-value" id="widgetTotalCount">32명</span>
+        </div>
+      </div>
+
+      <div class="widget-badge-item">
+        <div class="widget-icon" style="background: #fef3c7; color: #d97706;">⚡</div>
+        <div class="widget-info">
+          <span class="widget-label">추천 권장 모드</span>
+          <span class="widget-value" id="widgetModeLabel">스마트 냉난방</span>
+        </div>
+      </div>
     </div>
 
-    <div class="grid">
-        <div class="hole"><div class="mole"></div></div>
-        <div class="hole"><div class="mole"></div></div>
-        <div class="hole"><div class="mole"></div></div>
-        <div class="hole"><div class="mole"></div></div>
-        <div class="hole"><div class="mole"></div></div>
-        <div class="hole"><div class="mole"></div></div>
-        <div class="hole"><div class="mole"></div></div>
-        <div class="hole"><div class="mole"></div></div>
-        <div class="hole"><div class="mole"></div></div>
+    <!-- MAIN APP CARD -->
+    <div class="app-card">
+      
+      <!-- STEP HEADER -->
+      <div class="step-header" id="stepHeader">
+        <div class="step-tracker">
+          <div class="step-progress-bar" id="progressBar"></div>
+          <div class="step-node active" id="node1">1</div>
+          <div class="step-node" id="node2">2</div>
+          <div class="step-node" id="node3">3</div>
+          <div class="step-node" id="node4">4</div>
+        </div>
+      </div>
+
+      <!-- MAIN BODY -->
+      <div class="step-body">
+        
+        <!-- SCREEN 0: START -->
+        <div class="screen active" id="screen0">
+          <div class="start-hero">
+            <div class="start-icon-box">🌡️</div>
+            <h1 class="title-large">우리반 교실 최적 온도 찾기</h1>
+            <p class="desc-text">친구들의 원하는 온도를 모두 모아서<br>우리 반에 딱 맞는 최적의 온도를 계산해봐요!</p>
+            <button type="button" class="btn-main" onclick="goToStep(1)">
+              최적의 온도 찾기 START ➔
+            </button>
+          </div>
+        </div>
+
+        <!-- SCREEN 1: INPUT -->
+        <div class="screen" id="screen1">
+          <h2 class="title-large">희망 온도 수집</h2>
+          <p class="desc-text">각 친구들이 희망하는 교실 온도를 입력해 주세요.</p>
+          
+          <div class="control-panel">
+            <div class="panel-row">
+              <span class="panel-label">⚙️ 학급 전체 인원 입력</span>
+              <div class="student-input-group">
+                <input type="number" id="studentCountInput" class="num-input" value="32" min="1" max="50">
+                <span style="font-weight:700; font-size:0.9rem;">명</span>
+                <button type="button" class="btn-apply-count" onclick="applyStudentCount()">적용</button>
+              </div>
+            </div>
+            <div class="panel-row">
+              <span class="panel-label">⚡ 빠른 일괄 변경</span>
+              <div class="preset-chips">
+                <button type="button" class="chip-btn" onclick="setAllTemp(23)">23℃ 전체</button>
+                <button type="button" class="chip-btn" onclick="setAllTemp(24)">24℃ 전체</button>
+                <button type="button" class="chip-btn" onclick="setAllTemp(25)">25℃ 전체</button>
+                <button type="button" class="chip-btn" onclick="setAllTemp(26)">26℃ 전체</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="student-grid" id="studentGrid"></div>
+
+          <button type="button" class="btn-main" onclick="goToStep(2)">
+            온도 비율 분석하기 ➔
+          </button>
+        </div>
+
+        <!-- SCREEN 2: ANALYSIS -->
+        <div class="screen" id="screen2">
+          <h2 class="title-large">온도 선호 비율 분석</h2>
+          <p class="desc-text">25℃를 기준점으로 분석한 학급 온도 데이터 분포입니다.</p>
+
+          <div class="dashboard-grid">
+            <div class="mini-stat-card">
+              <div class="st-title">희망 평균</div>
+              <div class="st-value" id="statAvg">24.2℃</div>
+            </div>
+            <div class="mini-stat-card">
+              <div class="st-title">최저 희망</div>
+              <div class="st-value" id="statMin" style="color: var(--temp-low-blue);">21℃</div>
+            </div>
+            <div class="mini-stat-card">
+              <div class="st-title">최고 희망</div>
+              <div class="st-value" id="statMax" style="color: var(--temp-high-red);">27℃</div>
+            </div>
+          </div>
+
+          <div class="graph-box">
+            <div class="graph-bar-outer">
+              <div id="barLow" class="bar-segment bar-low" style="width: 50%;">50%</div>
+              <div id="barHigh" class="bar-segment bar-high" style="width: 50%;">50%</div>
+            </div>
+            
+            <div class="analysis-comment-box" id="analysisComment">
+              📊 데이터 분석 중입니다...
+            </div>
+          </div>
+
+          <button type="button" class="btn-main" onclick="goToStep(3)">
+            최적의 온도는? (결과 보기) ➔
+          </button>
+        </div>
+
+        <!-- SCREEN 3: RESULT -->
+        <div class="screen" id="screen3">
+          <div class="loading-spinner-box" id="resultLoading">
+            <div class="spinner"></div>
+            <p style="font-weight: 700; color: var(--text-sub);">우리반 맞춤 최적 온도를 계산하는 중...</p>
+          </div>
+
+          <div class="result-content-area" id="resultContent">
+            <h2 class="title-large">우리반 최적 온도</h2>
+            <p class="desc-text">모두의 희망 온도를 고려해서 찾아낸 최적의 설정 온도예요.</p>
+
+            <div class="result-circle-box">
+              <span style="font-size: 0.85rem; color: #64748b; font-weight: 800; letter-spacing: 1px;">OPTIMAL</span>
+              <div class="result-temp-number" id="resultTempNumber">24℃</div>
+              <span style="font-size: 0.85rem; color: #0284c7; font-weight: 700;">추천 설정 온도</span>
+            </div>
+
+            <div class="satisfaction-guarantee-card" id="satisfactionGuarantee">
+              ✨ 이 온도로 설정하면 우리반 대부분의 친구들이 부담 없이 만족해요!
+            </div>
+
+            <button type="button" class="btn-main" onclick="goToStep(4)">
+              학생 만족도 조사하기 ➔
+            </button>
+          </div>
+        </div>
+
+        <!-- SCREEN 4: SATISFACTION POLL -->
+        <div class="screen" id="screen4">
+          <h2 class="title-large">최적 온도 만족도 조사</h2>
+          <p class="desc-text">결정된 온도로 에어컨/난방을 틀었을 때의 느낌을 말해주세요.</p>
+
+          <div class="poll-container">
+            <div class="poll-card" onclick="castVote('good')">
+              <div class="poll-bg-bar" id="pollBarGood"></div>
+              <div class="poll-card-header">
+                <span class="poll-label">👍 만족해요! (딱 좋아요)</span>
+                <span class="poll-count" id="pollCountGood">0표</span>
+              </div>
+            </div>
+
+            <div class="poll-card" onclick="castVote('hot')">
+              <div class="poll-bg-bar" id="pollBarHot"></div>
+              <div class="poll-card-header">
+                <span class="poll-label">😅 살짝 더워요</span>
+                <span class="poll-count" id="pollCountHot">0표</span>
+              </div>
+            </div>
+
+            <div class="poll-card" onclick="castVote('cold')">
+              <div class="poll-bg-bar" id="pollBarCold"></div>
+              <div class="poll-card-header">
+                <span class="poll-label">🥶 살짝 추워요</span>
+                <span class="poll-count" id="pollCountCold">0표</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="solution-card" id="solutionCard"></div>
+
+          <button type="button" class="btn-main" style="margin-top: 18px; background: #64748b; box-shadow: none;" onclick="resetAll()">
+            🔄 처음부터 다시 설정하기
+          </button>
+        </div>
+
+      </div>
     </div>
 
-    <button id="start-btn" onclick="startGame()">게임 시작</button>
+    <!-- RIGHT SIDE WIDGET -->
+    <div class="side-widget">
+      <div class="widget-title">
+        <span>💡</span> 스마트 쾌적 가이드
+      </div>
 
-    <script>
-        const holes = document.querySelectorAll('.hole');
-        const scoreDisplay = document.getElementById('score');
-        const timeLeftDisplay = document.getElementById('time-left');
-        const startBtn = document.getElementById('start-btn');
+      <div class="widget-badge-item">
+        <div class="widget-icon" style="background: #e0f2fe; color: #0284c7;">🌀</div>
+        <div class="widget-info">
+          <span class="widget-label">바람 방향 설정</span>
+          <span class="widget-value" style="font-size: 0.85rem;">직풍 방지 (천장 상향)</span>
+        </div>
+      </div>
 
-        let score = 0;
-        let lastHole;
-        let timeUp = false;
-        let countdown;
-        let moleTimer;
-        let timeLeft = 30;
+      <div class="widget-badge-item">
+        <div class="widget-icon" style="background: #fce7f3; color: #db2777;">🧥</div>
+        <div class="widget-info">
+          <span class="widget-label">체온 조절 팁</span>
+          <span class="widget-value" style="font-size: 0.85rem;">얇은 겉옷/담요 준비</span>
+        </div>
+      </div>
 
-        // 랜덤 시간 생성 (두더지가 나와있는 시간)
-        function randomTime(min, max) {
-            return Math.round(Math.random() * (max - min) + min);
+      <div class="widget-badge-item">
+        <div class="widget-icon" style="background: #dcfce7; color: #16a34a;">🌱</div>
+        <div class="widget-info">
+          <span class="widget-label">에너지 절약</span>
+          <span class="widget-value" style="font-size: 0.85rem;">탄소 배출 15% 감소</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let className = "3학년 5반";
+    let totalStudents = 32;
+    let studentNames = Array.from({length: 50}, (_, i) => `${i + 1}번 학생`);
+    let temperatures = Array(totalStudents).fill(25);
+    let pollVotes = { good: 0, hot: 0, cold: 0 };
+
+    function updateClassName(val) {
+      className = val.trim() || "3학년 5반";
+      const inputElem = document.getElementById('classNameInput');
+      if (inputElem) inputElem.value = className;
+    }
+
+    function applyStudentCount() {
+      const input = document.getElementById('studentCountInput');
+      let val = parseInt(input.value, 10);
+
+      if (isNaN(val) || val < 1) {
+        alert("최소 1명 이상 입력해 주세요.");
+        input.value = totalStudents;
+        return;
+      }
+      if (val > 50) {
+        alert("최대 50명까지 설정 가능합니다.");
+        val = 50;
+        input.value = 50;
+      }
+
+      totalStudents = val;
+      temperatures = Array(totalStudents).fill(25);
+
+      const widgetCount = document.getElementById('widgetTotalCount');
+      if (widgetCount) widgetCount.innerText = `${totalStudents}명`;
+
+      renderStudentCards();
+    }
+
+    function renderStudentCards() {
+      const grid = document.getElementById('studentGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      for (let i = 0; i < totalStudents; i++) {
+        const temp = temperatures[i];
+        let colorClass = '';
+        if (temp < 25) colorClass = 'cool';
+        else if (temp > 25) colorClass = 'warm';
+
+        const card = document.createElement('div');
+        card.className = `input-card ${colorClass}`;
+        card.innerHTML = `
+          <input type="text" class="name-input" value="${studentNames[i]}" onchange="updateStudentName(${i}, this.value)" title="이름을 변경하려면 클릭하세요">
+          <div class="temp-val">${temp}℃</div>
+          <div class="btn-group-mini">
+            <button type="button" class="btn-mini minus" onclick="adjustTemp(${i}, -1)">-</button>
+            <button type="button" class="btn-mini plus" onclick="adjustTemp(${i}, 1)">+</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    function updateStudentName(idx, val) {
+      studentNames[idx] = val.trim() || `${idx + 1}번 학생`;
+    }
+
+    function adjustTemp(idx, delta) {
+      temperatures[idx] += delta;
+      if (temperatures[idx] < 18) temperatures[idx] = 18;
+      if (temperatures[idx] > 30) temperatures[idx] = 30;
+      renderStudentCards();
+    }
+
+    function setAllTemp(val) {
+      temperatures = Array(totalStudents).fill(val);
+      renderStudentCards();
+    }
+
+    function goToStep(stepNum) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const targetScreen = document.getElementById(`screen${stepNum}`);
+      if (targetScreen) targetScreen.classList.add('active');
+
+      const header = document.getElementById('stepHeader');
+      if (header) {
+        if (stepNum === 0) {
+          header.style.display = 'none';
+        } else {
+          header.style.display = 'block';
+          updateStepHeader(stepNum);
         }
+      }
 
-        // 랜덤 구멍 선택
-        function randomHole(holes) {
-            const idx = Math.floor(Math.random() * holes.length);
-            const hole = holes[idx];
-            if (hole === lastHole) {
-                return randomHole(holes);
-            }
-            lastHole = hole;
-            return hole;
+      if (stepNum === 2) updateAnalysisData();
+      if (stepNum === 3) runResultSequence();
+    }
+
+    function updateStepHeader(step) {
+      const progressBar = document.getElementById('progressBar');
+      if (progressBar) progressBar.style.width = `${((step - 1) / 3) * 100}%`;
+
+      for (let i = 1; i <= 4; i++) {
+        const node = document.getElementById(`node${i}`);
+        if (node) {
+          node.className = 'step-node';
+          if (i < step) node.classList.add('done');
+          if (i === step) node.classList.add('active');
         }
+      }
+    }
 
-        // 두더지 나타나기
-        function peep() {
-            const time = randomTime(500, 1000); // 0.5초 ~ 1초 사이
-            const hole = randomHole(holes);
-            const mole = hole.querySelector('.mole');
-            
-            mole.classList.remove('hit');
-            hole.classList.add('up');
+    function updateAnalysisData() {
+      const sum = temperatures.reduce((a, b) => a + b, 0);
+      const avg = (sum / totalStudents).toFixed(1);
+      const min = Math.min(...temperatures);
+      const max = Math.max(...temperatures);
 
-            moleTimer = setTimeout(() => {
-                hole.classList.remove('up');
-                if (!timeUp) peep();
-            }, time);
+      const avgElem = document.getElementById('statAvg');
+      const minElem = document.getElementById('statMin');
+      const maxElem = document.getElementById('statMax');
+
+      if (avgElem) avgElem.innerText = `${avg}℃`;
+      if (minElem) minElem.innerText = `${min}℃`;
+      if (maxElem) maxElem.innerText = `${max}℃`;
+
+      let lowCount = 0;
+      let highCount = 0;
+      temperatures.forEach(t => { if (t < 25) lowCount++; else highCount++; });
+
+      const lowRatio = Math.round((lowCount / totalStudents) * 100);
+      const highRatio = 100 - lowRatio;
+
+      const barLow = document.getElementById('barLow');
+      const barHigh = document.getElementById('barHigh');
+
+      if (barLow) {
+        barLow.style.width = `${lowRatio}%`;
+        barLow.innerText = lowRatio > 12 ? `${lowCount}명 (${lowRatio}%)` : '';
+      }
+
+      if (barHigh) {
+        barHigh.style.width = `${highRatio}%`;
+        barHigh.innerText = highRatio > 12 ? `${highCount}명 (${highRatio}%)` : '';
+      }
+
+      const commentBox = document.getElementById('analysisComment');
+      if (commentBox) {
+        if (lowRatio > 65) {
+          commentBox.innerText = "❄️ 시원한 공기를 선호하는 친구들의 비율이 높아요.";
+        } else if (highRatio > 65) {
+          commentBox.innerText = "☀️ 따뜻하고 포근한 공기를 선호하는 친구들의 비율이 높아요.";
+        } else {
+          commentBox.innerText = "⚖️ 시원함을 원하는 그룹과 따뜻함을 원하는 그룹이 서로 비슷해요.";
         }
+      }
+    }
 
-        // 게임 시작
-        function startGame() {
-            // 초기화
-            score = 0;
-            timeLeft = 30;
-            timeUp = false;
-            scoreDisplay.textContent = 0;
-            timeLeftDisplay.textContent = timeLeft;
-            startBtn.disabled = true;
+    function runResultSequence() {
+      const loading = document.getElementById('resultLoading');
+      const content = document.getElementById('resultContent');
 
-            // 카운트다운 타이머
-            countdown = setInterval(() => {
-                timeLeft--;
-                timeLeftDisplay.textContent = timeLeft;
+      if (loading) loading.style.display = 'flex';
+      if (content) content.style.display = 'none';
 
-                if (timeLeft <= 0) {
-                    clearInterval(countdown);
-                    timeUp = true;
-                    startBtn.disabled = false;
-                    alert(`게임 종료! 최종 점수: ${score}점`);
-                }
-            }, 1000);
+      const sum = temperatures.reduce((a, b) => a + b, 0);
+      const avg = sum / totalStudents;
+      const optimal = Math.round(avg);
 
-            peep();
+      setTimeout(() => {
+        if (loading) loading.style.display = 'none';
+        if (content) content.style.display = 'flex';
+        const tempNumElem = document.getElementById('resultTempNumber');
+        if (tempNumElem) tempNumElem.innerText = `${optimal}℃`;
+
+        const widgetMode = document.getElementById('widgetModeLabel');
+        if (widgetMode) widgetMode.innerText = `${optimal}℃ 권장 설정`;
+      }, 750);
+    }
+
+    function castVote(type) {
+      pollVotes[type]++;
+      const totalVotes = pollVotes.good + pollVotes.hot + pollVotes.cold;
+
+      const goodRatio = Math.round((pollVotes.good / totalVotes) * 100);
+      const hotRatio = Math.round((pollVotes.hot / totalVotes) * 100);
+      const coldRatio = Math.round((pollVotes.cold / totalVotes) * 100);
+
+      const barGood = document.getElementById('pollBarGood');
+      const countGood = document.getElementById('pollCountGood');
+      if (barGood) barGood.style.width = `${goodRatio}%`;
+      if (countGood) countGood.innerText = `${pollVotes.good}표 (${goodRatio}%)`;
+
+      const barHot = document.getElementById('pollBarHot');
+      const countHot = document.getElementById('pollCountHot');
+      if (barHot) barHot.style.width = `${hotRatio}%`;
+      if (countHot) countHot.innerText = `${pollVotes.hot}표 (${hotRatio}%)`;
+
+      const barCold = document.getElementById('pollBarCold');
+      const countCold = document.getElementById('pollCountCold');
+      if (barCold) barCold.style.width = `${coldRatio}%`;
+      if (countCold) countCold.innerText = `${pollVotes.cold}표 (${coldRatio}%)`;
+
+      const card = document.getElementById('solutionCard');
+      if (card) {
+        card.style.display = 'block';
+        if (type === 'good') {
+          card.innerHTML = "🎉 <b>우리 반 다수가 만족하는 완벽한 온도예요!</b> 현 상태를 유지해보세요.";
+        } else if (type === 'hot') {
+          card.innerHTML = "💡 <b>더운 친구들을 위한 팁:</b> 에어컨 바람 방향을 아래로 내리거나 창가 쪽 자리를 권해봐요.";
+        } else {
+          card.innerHTML = "💡 <b>추운 친구들을 위한 팁:</b> 에어컨 바람을 직접 받지 않게 담요나 겉옷을 입도록 해봐요.";
         }
+      }
+    }
 
-        // 두더지 클릭(잡기) 이벤트
-        function bonk(e) {
-            if (!e.isTrusted) return; // 자바스크립트로 가짜 클릭 방지
-            
-            const hole = this.parentNode;
-            
-            // 이미 잡힌 두더지이거나 안 올라온 두더지면 무시
-            if (!hole.classList.contains('up') || this.classList.contains('hit')) return;
+    function resetAll() {
+      totalStudents = 32;
+      const inputElem = document.getElementById('studentCountInput');
+      if (inputElem) inputElem.value = 32;
 
-            this.classList.add('hit');
-            score++;
-            scoreDisplay.textContent = score;
+      temperatures = Array(totalStudents).fill(25);
+      pollVotes = { good: 0, hot: 0, cold: 0 };
 
-            // 클릭 후 빠르게 내려가기
-            setTimeout(() => {
-                hole.classList.remove('up');
-            }, 200);
-        }
+      const widgetCount = document.getElementById('widgetTotalCount');
+      if (widgetCount) widgetCount.innerText = "32명";
 
-        // 모든 두더지에 클릭 이벤트 등록
-        const moles = document.querySelectorAll('.mole');
-        moles.forEach(mole => mole.addEventListener('click', bonk));
-    </script>
+      ['Good', 'Hot', 'Cold'].forEach(key => {
+        const bar = document.getElementById(`pollBar${key}`);
+        const count = document.getElementById(`pollCount${key}`);
+        if (bar) bar.style.width = '0%';
+        if (count) count.innerText = '0표';
+      });
+
+      const card = document.getElementById('solutionCard');
+      if (card) card.style.display = 'none';
+
+      renderStudentCards();
+      goToStep(0);
+    }
+
+    window.onload = () => {
+      renderStudentCards();
+    };
+  </script>
 </body>
 </html>
